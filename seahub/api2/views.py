@@ -33,7 +33,7 @@ from .throttling import ScopedRateThrottle, AnonRateThrottle, UserRateThrottle
 from .authentication import TokenAuthentication
 from .serializers import AuthTokenSerializer
 from .utils import get_diff_details, \
-    api_error, get_file_size, prepare_starred_files, \
+    api_error, get_file_size, prepare_starred_files, is_web_request, \
     get_groups, api_group_check, get_timestamp, json_response, is_seafile_pro
 
 from seahub.wopi.utils import get_wopi_dict
@@ -74,7 +74,8 @@ from seahub.utils.devices import do_unlink_device
 from seahub.utils.repo import get_repo_owner, get_library_storages, \
         get_locked_files_by_dir, get_related_users_by_repo, \
         is_valid_repo_id_format, can_set_folder_perm_by_user, \
-        add_encrypted_repo_secret_key_to_database
+        add_encrypted_repo_secret_key_to_database, get_available_repo_perms, \
+        parse_repo_perm
 from seahub.utils.star import star_file, unstar_file
 from seahub.utils.file_types import DOCUMENT
 from seahub.utils.file_size import get_file_size_unit
@@ -687,6 +688,7 @@ class Repos(APIView):
             else:
                 shared_repos = seafile_api.get_share_in_repo_list(
                         email, -1, -1)
+
             repos_with_admin_share_to = ExtraSharePermission.objects.\
                     get_repos_with_admin_permission(email)
 
@@ -703,6 +705,10 @@ class Repos(APIView):
             for r in shared_repos:
                 if q and q.lower() not in r.name.lower():
                     continue
+
+                if parse_repo_perm(r.permission).can_download is False:
+                    if not is_web_request(request):
+                        continue
 
                 r.password_need = is_passwd_set(r.repo_id, email)
                 repo = {
@@ -757,6 +763,10 @@ class Repos(APIView):
             for r in group_repos:
                 if q and q.lower() not in r.name.lower():
                     continue
+
+                if parse_repo_perm(r.permission).can_download is False:
+                    if not is_web_request(request):
+                        continue
 
                 repo = {
                     "type": "grepo",
@@ -2278,7 +2288,7 @@ class OpCopyView(APIView):
             return api_error(status.HTTP_404_NOT_FOUND, error_msg)
 
         # permission check
-        if check_folder_permission(request, repo_id, parent_dir) is None:
+        if parse_repo_perm(check_folder_permission(request, repo_id, parent_dir)).can_copy is False:
             return api_error(status.HTTP_403_FORBIDDEN,
                     'You do not have permission to copy file of this folder.')
 
@@ -2716,7 +2726,8 @@ class FileView(APIView):
                 return api_error(status.HTTP_400_BAD_REQUEST, 'Missing arguments.')
 
             # check src folder permission
-            if check_folder_permission(request, repo_id, src_dir) is None:
+
+            if parse_repo_perm(check_folder_permission(request, repo_id, src_dir)).can_copy is False:
                 return api_error(status.HTTP_403_FORBIDDEN,
                                  'You do not have permission to copy file.')
 
@@ -3036,7 +3047,10 @@ class FileHistory(APIView):
             error_msg = 'File %s not found.' % path
             return api_error(status.HTTP_404_NOT_FOUND, error_msg)
 
-        if check_folder_permission(request, repo_id, path) != 'rw':
+
+        permission = check_folder_permission(request, repo_id, path)
+        if permission not in get_available_repo_perms():
+
             error_msg = 'Permission denied.'
             return api_error(status.HTTP_403_FORBIDDEN, error_msg)
 
@@ -3086,8 +3100,7 @@ class FileSharedLinkView(APIView):
             return api_error(status.HTTP_400_BAD_REQUEST, 'Password is too short')
 
         if share_type.lower() == 'download':
-
-            if check_folder_permission(request, repo_id, path) is None:
+            if parse_repo_perm(check_folder_permission(request, repo_id, path)).can_download is False:
                 return api_error(status.HTTP_403_FORBIDDEN, 'Permission denied')
 
             if not request.user.permissions.can_generate_share_link():
@@ -3944,7 +3957,7 @@ class SharedRepo(APIView):
         share_type = request.GET.get('share_type')
         permission = request.GET.get('permission')
 
-        if permission not in ('r', 'rw'):
+        if permission not in get_available_repo_perms():
             error_msg = 'permission invalid.'
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
@@ -4401,7 +4414,7 @@ class GroupRepos(APIView):
                              'NOT allow to create encrypted library.')
 
         permission = request.data.get("permission", 'r')
-        if permission != 'r' and permission != 'rw':
+        if permission not in get_available_repo_perms():
             return api_error(status.HTTP_400_BAD_REQUEST, 'Invalid permission')
 
         org_id = -1
@@ -5101,7 +5114,7 @@ class RepoUserFolderPerm(APIView):
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
         perm = request.data.get('permission', None)
-        if not perm or perm not in ('r', 'rw'):
+        if not perm or perm not in get_available_repo_perms():
             error_msg = 'permission invalid.'
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
@@ -5189,7 +5202,7 @@ class RepoUserFolderPerm(APIView):
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
         perm = request.data.get('permission', None)
-        if not perm or perm not in ('r', 'rw'):
+        if not perm or perm not in get_available_repo_perms():
             error_msg = 'permission invalid.'
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
@@ -5376,7 +5389,7 @@ class RepoGroupFolderPerm(APIView):
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
         perm = request.data.get('permission', None)
-        if not perm or perm not in ('r', 'rw'):
+        if not perm or perm not in get_available_repo_perms():
             error_msg = 'permission invalid.'
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
@@ -5463,7 +5476,7 @@ class RepoGroupFolderPerm(APIView):
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
         perm = request.data.get('permission', None)
-        if not perm or perm not in ('r', 'rw'):
+        if not perm or perm not in get_available_repo_perms():
             error_msg = 'permission invalid.'
             return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 
