@@ -1233,13 +1233,13 @@
                                 <select name="permission" class="share-permission-select">
                                     <option value="preview_download">{% trans "Can download" %}</option>
                                     <option value="preview_only">{% trans "Preview only" %}</option>
-                                    <option value="edit_download">{% trans "Can Edit" %}</option>
+                                    <option id="edit-download-permission" value="edit_download">{% trans "Can Edit" %}</option>
                                 </select>
                             </div>
                             <ul class="permission-message">
                                 <li class="">{% trans 'User can view and download file.' %}</li>
                                 <li class="hidden">{% trans 'User can only view file.' %}</li>
-                                <li class="hidden">{% trans 'User can edit and download file.' %}</li>
+                                <li id="edit-download-permission-desc" class="hidden">{% trans 'User can edit and download file.' %}</li>
                             </ul>
                         </div>
                     </label>

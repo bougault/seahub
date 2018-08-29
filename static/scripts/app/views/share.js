@@ -172,10 +172,10 @@ define([
 
             if (link_data.is_expired) {
                 this.$('#send-download-link').addClass('hide');
-                this.$('#send-download-link .copy-shared-link').addClass('hide');
+                this.$('#download-link-operations .copy-shared-link').addClass('hide');
                 this.$('#download-link, #direct-dl-link').append(' <span class="error">(' + gettext('Expired') + ')</span>');
             } else {
-                this.$('#send-download-link .copy-shared-link').removeClass('hide');
+                this.$('#download-link-operations .copy-shared-link').removeClass('hide');
             }
             this.$('#download-link-operations').removeClass('hide');
 
@@ -216,6 +216,10 @@ define([
                         _this.renderDownloadLink(link_data);
                     } else {
                         _this.$('#generate-download-link-form').removeClass('hide');
+                        if (!_this.is_dir && (_this.dirent_path.indexOf('.docx')==-1 && _this.dirent_path.indexOf('.xlsx')==-1 && _this.dirent_path.indexOf('.pptx')==-1) && (app.pageOptions.enable_office_web_app || app.pageOptions.enable_onlyoffice)) {
+                            _this.$('#edit-download-permission-desc').addClass('hide');
+                            _this.$('#edit-download-permission').addClass('hide');
+                        }
                     }
                 },
                 error: function(xhr, textStatus, errorThrown) {

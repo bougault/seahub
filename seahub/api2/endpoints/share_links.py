@@ -233,7 +233,7 @@ class ShareLinks(APIView):
 
         if SHARE_LINK_EXPIRE_DAYS_MAX > 0:
             if expire_days > SHARE_LINK_EXPIRE_DAYS_MAX:
-                error_msg = _('Expire days should be less than equal to %s' %
+                error_msg = _('Expire days should be less than or equal to %s' %
                         SHARE_LINK_EXPIRE_DAYS_MAX)
                 return api_error(status.HTTP_400_BAD_REQUEST, error_msg)
 

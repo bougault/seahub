@@ -38,7 +38,7 @@ from seahub.profile.models import Profile
 from seahub.share.models import FileShare, UploadLinkShare
 from seahub.revision_tag.models import RevisionTags
 from seahub.utils import render_permission_error, render_error, \
-    get_fileserver_root, gen_shared_upload_link, is_org_context, \
+    gen_shared_upload_link, is_org_context, \
     gen_dir_share_link, gen_file_share_link, get_file_type_and_ext, \
     get_user_repos, EMPTY_SHA1, gen_file_get_url, \
     new_merge_with_no_conflict, get_max_upload_file_size, \
@@ -56,6 +56,10 @@ from seahub.settings import AVATAR_FILE_STORAGE, \
     ENABLE_SUB_LIBRARY, ENABLE_FOLDER_PERM, ENABLE_REPO_SNAPSHOT_LABEL, \
     UNREAD_NOTIFICATIONS_REQUEST_INTERVAL, SHARE_LINK_EXPIRE_DAYS_MIN, \
     SHARE_LINK_EXPIRE_DAYS_MAX
+
+from seahub.wopi.settings import ENABLE_OFFICE_WEB_APP
+from seahub.onlyoffice.settings import ENABLE_ONLYOFFICE
+
 from seahub.constants import HASH_URLS
 
 LIBRARY_TEMPLATES = getattr(settings, 'LIBRARY_TEMPLATES', {})
@@ -737,6 +741,8 @@ def libraries(request):
             'enable_file_comment': settings.ENABLE_FILE_COMMENT,
             'share_link_expire_days_min': SHARE_LINK_EXPIRE_DAYS_MIN,
             'share_link_expire_days_max': SHARE_LINK_EXPIRE_DAYS_MAX,
+            'enable_office_web_app': ENABLE_OFFICE_WEB_APP,
+            'enable_onlyoffice': ENABLE_ONLYOFFICE,
             })
 
 @login_required
