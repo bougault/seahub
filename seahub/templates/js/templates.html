@@ -1197,6 +1197,24 @@
                         <input type="password" name="password_again" class="input" id="passwd-again" />
                     </div>
 
+                    {% if share_link_expire_days_min > 0 or share_link_expire_days_max > 0 %}
+                    <label class="checkbox-label">
+                        <input type="checkbox" checked="checked" disabled="disabled" name="set_expiration" class="vam" />
+                        <span class="checkbox-option vam">{% trans "Add auto expiration"%}</span>
+                    </label>
+                    <div>
+                        {% if share_link_expire_days_min > 0 and share_link_expire_days_max > 0 %}
+                        <label for="expire-days">{% trans "Days" %} ({{ share_link_expire_days_min }}-{{ share_link_expire_days_max }})</label><br />
+                        {% elif share_link_expire_days_min > 0 %}
+                        <label for="expire-days">{% trans "Days" %} {% blocktrans %}(Greater or equal to {{share_link_expire_days_min}}){% endblocktrans %}</label><br />
+                        {% elif share_link_expire_days_max > 0 %}
+                        <label for="expire-days">{% trans "Days" %} {% blocktrans %}(Less than or equal to {{share_link_expire_days_max}}){% endblocktrans %}</label><br />
+                        {% else %}
+                        <label for="expire-days">{% trans "Days" %}</label><br />
+                        {% endif %}
+                        <input type="text" name="expire_days" class="input" id="expire-days" />
+                    </div>
+                    {% else %}
                     <label class="checkbox-label">
                         <input type="checkbox" name="set_expiration" class="vam" />
                         <span class="checkbox-option vam">{% trans "Add auto expiration"%}</span>
@@ -1205,11 +1223,25 @@
                         <label for="expire-days">{% trans "Days" %}</label><br />
                         <input type="text" name="expire_days" class="input" id="expire-days" />
                     </div>
+                    {% endif %}
 
                     <% if (app.pageOptions.is_pro) { %>
                     <label class="checkbox-label">
-                        <input type="checkbox" name="preview_only" class="vam" />
-                        <span class="checkbox-option vam">{% trans "Online preview only" %}</span>
+                        <span class="checkbox-option vam pr10">{% trans "Permission"%}</span>
+                        <div class="permission-info">
+                            <div class="permission-options">
+                                <select name="permission" class="share-permission-select">
+                                    <option value="preview_download">{% trans "Can download" %}</option>
+                                    <option value="preview_only">{% trans "Preview only" %}</option>
+                                    <option value="edit_download">{% trans "Can Edit" %}</option>
+                                </select>
+                            </div>
+                            <ul class="permission-message">
+                                <li class="">{% trans 'User can view and download file.' %}</li>
+                                <li class="hidden">{% trans 'User can only view file.' %}</li>
+                                <li class="hidden">{% trans 'User can edit and download file.' %}</li>
+                            </ul>
+                        </div>
                     </label>
                     <% } %>
 
@@ -1220,14 +1252,16 @@
                     <dl>
                         <dt>{% trans "Link: " %}</dt>
                         <dd id="download-link">
-                            <span></span>
+                            <span class="shared-link-href"></span>
                             <input type="text" readonly="readonly" value="" class="shared-link hide" />
+                            <i type="text" class="copy-shared-link icon-copy" title="{% trans 'Copy' %}"></i>
                         </dd>
                         <% if (!is_dir) { %>
                         <dt>{% trans "Direct Download Link: " %}</dt>
                         <dd id="direct-dl-link">
-                            <span></span>
+                            <span class="shared-link-href"></span>
                             <input type="text" readonly="readonly" value="" class="shared-link hide" />
+                            <i type="text" class="copy-shared-link icon-copy" title="{% trans 'Copy' %}"></i>
                         </dd>
                         <% } %>
                     </dl>

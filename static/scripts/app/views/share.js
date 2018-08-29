@@ -119,6 +119,8 @@ define([
             'keydown #generate-download-link-form .generate-random-password': 'generateRandomDownloadPassword',
             'click #generate-download-link-form .show-or-hide-password': 'showOrHideDownloadPassword',
             'keydown #generate-download-link-form .show-or-hide-password': 'showOrHideDownloadPassword',
+            'click .copy-shared-link': 'sharedLinkCopy',
+            'change .share-permission-select': 'selectPermissionChanged',
 
             // upload link
             'submit #generate-upload-link-form': 'generateUploadLink',
@@ -170,7 +172,10 @@ define([
 
             if (link_data.is_expired) {
                 this.$('#send-download-link').addClass('hide');
+                this.$('#send-download-link .copy-shared-link').addClass('hide');
                 this.$('#download-link, #direct-dl-link').append(' <span class="error">(' + gettext('Expired') + ')</span>');
+            } else {
+                this.$('#send-download-link .copy-shared-link').removeClass('hide');
             }
             this.$('#download-link-operations').removeClass('hide');
 
@@ -272,15 +277,28 @@ define([
             var link_type = options.link_type, // 'download' or 'upload'
                 form = options.form,
                 form_id = form.attr('id'),
-                use_passwd_checkbox = $('[name="use_passwd"]', form),
-                use_passwd = use_passwd_checkbox.prop('checked');
+                use_passwd_checkbox = null,
+                set_expiration_checkbox = null,
+                use_passwd = false,
+                set_expiration = false,
+                preview_only = false,
+                preview_download = false,
+                edit_download = false;
             if (link_type == 'download') {
-                var set_expiration_checkbox = $('[name="set_expiration"]', form),
-                    set_expiration = set_expiration_checkbox.prop('checked');
+                use_passwd_checkbox = $('[name="use_passwd"]', form);
+                set_expiration_checkbox = $('[name="set_expiration"]', form);
+                use_passwd = use_passwd_checkbox.prop('checked');
+                set_expiration = set_expiration_checkbox.prop('checked');
 
                 if (app.pageOptions.is_pro) {
-                    var $preview_only = $('[name="preview_only"]', form);
-                    var preview_only = $preview_only.prop('checked');
+                    var selectValue = $('select', form).val();
+                    if (selectValue === "preview_only") {
+                        preview_only = true;
+                    } else if (selectValue === "preview_download") {
+                        preview_download = true;
+                    } else if (selectValue === "edit_download") {
+                        edit_download = true;
+                    }
                 }
             }
             var post_data = {};
@@ -323,11 +341,23 @@ define([
                 post_data["expire_days"] = expire_days;
             }
 
-            if (link_type == 'download' && preview_only) {
-                post_data["permissions"] = JSON.stringify({
-                    "can_preview": true,
-                    "can_download": false
-                });
+            if (link_type == 'download') {
+                if (preview_only) {
+                    post_data["permissions"] = JSON.stringify({
+                        "can_edit": false,
+                        "can_download": false
+                    });
+                } else if (preview_download) {
+                    post_data["permissions"] = JSON.stringify({
+                        "can_edit": false,
+                        "can_download": true
+                    });
+                } else if (edit_download) {
+                    post_data["permissions"] = JSON.stringify({
+                        "can_edit": true,
+                        "can_download": true
+                    });
+                }
             }
 
             $('.error', form).addClass('hide').html('');
@@ -353,15 +383,20 @@ define([
                     passwd_again_input.val('');
                 }
                 if (link_type == 'download' && set_expiration) {
-                    set_expiration_checkbox.prop('checked', false)
-                        .parent().removeClass('checkbox-checked')
-                        // hide 'day' input
-                        .end().closest('.checkbox-label').next().addClass('hide');
+
+                    if (app.pageOptions.share_link_expire_days_min > 0 || app.pageOptions.share_link_expire_days_max > 0) {
+                        set_expiration_checkbox.prop('checked', true);
+                    } else {
+                        set_expiration_checkbox.prop('checked', false)
+                            .parent().removeClass('checkbox-checked')
+                            // hide 'day' input
+                            .end().closest('.checkbox-label').next().addClass('hide');
+                    }
                     expire_days_input.val('');
                 }
 
-                if (link_type == 'download' && preview_only) {
-                    $preview_only.prop('checked', false);
+                if (link_type == 'download') {
+                    $('select', form).get(0).selectedIndex = 0;
                 }
 
                 if (link_type == 'download') {
@@ -387,6 +422,21 @@ define([
                 post_url: Common.getUrl({name: 'share_admin_share_links'})
             });
             return false;
+        },
+
+        sharedLinkCopy: function(event) {
+            var $container = $(event.target).closest("dd");
+            $container.find('.shared-link').val($container.find('.shared-link-href').html()).select();
+            document.execCommand('copy');
+            Common.feedback(gettext("Share link copied to clipboard"), 'success');
+        },
+
+        selectPermissionChanged: function(event) {
+            var $select = $(event.target);
+            var $ul =  $select.closest(".permission-info").find(".permission-message");
+            var selectIndex = $select.get(0).selectedIndex;
+            $ul.children().addClass("hide");
+            $ul.children(":nth-child("+ (selectIndex + 1) +")").removeClass("hide");
         },
 
         showDownloadLinkSendForm: function() {
@@ -478,6 +528,7 @@ define([
                 success: function(data) {
                     _this.$('#generate-download-link-form').removeClass('hide');
                     _this.$('#download-link-operations').addClass('hide');
+
                 }
             });
         },
