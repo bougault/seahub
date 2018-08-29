@@ -1474,6 +1474,9 @@ textarea:-moz-placeholder {/* for FF */
 #confirm-popup {
     min-width:255px;
 }
+.checkbox-option.pr10 {
+    padding-right: 10px;
+}
 /**** ui-autocomplete *****/
 .ui-autocomplete {
     padding:2px;
@@ -3895,6 +3898,31 @@ button.sf-dropdown-toggle:focus {
 #download-link-operations dt {
     margin: 0;
 }
+#download-link-operations dd i {
+    padding: 3px;
+    font-size: 16px;
+    color: #999;
+}
+#download-link-operations dd i:hover {
+    cursor: pointer; 
+    color: #333;
+}
+#generate-download-link-form .permission-options{
+    float: left;
+    padding-right: 10px;
+}
+#generate-download-link-form .permission-message {
+    display: inline-block;
+    height: 30px;
+    overflow: hidden;
+}
+#generate-download-link-form .permission-message li{
+    line-height: 30px;
+    font-weight: normal;
+    height: 30px;
+    color: #333;
+}
+
 /* shared upload link */
 #upload-link-panel {
     width:600px;

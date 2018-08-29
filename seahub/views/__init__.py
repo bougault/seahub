@@ -54,7 +54,8 @@ from seahub.views.modules import MOD_PERSONAL_WIKI, enable_mod_for_user, \
 import seahub.settings as settings
 from seahub.settings import AVATAR_FILE_STORAGE, \
     ENABLE_SUB_LIBRARY, ENABLE_FOLDER_PERM, ENABLE_REPO_SNAPSHOT_LABEL, \
-    UNREAD_NOTIFICATIONS_REQUEST_INTERVAL
+    UNREAD_NOTIFICATIONS_REQUEST_INTERVAL, SHARE_LINK_EXPIRE_DAYS_MIN, \
+    SHARE_LINK_EXPIRE_DAYS_MAX
 from seahub.constants import HASH_URLS
 
 LIBRARY_TEMPLATES = getattr(settings, 'LIBRARY_TEMPLATES', {})
@@ -734,6 +735,8 @@ def libraries(request):
             'enable_share_to_all_groups': config.ENABLE_SHARE_TO_ALL_GROUPS,
             'enable_group_discussion': settings.ENABLE_GROUP_DISCUSSION,
             'enable_file_comment': settings.ENABLE_FILE_COMMENT,
+            'share_link_expire_days_min': SHARE_LINK_EXPIRE_DAYS_MIN,
+            'share_link_expire_days_max': SHARE_LINK_EXPIRE_DAYS_MAX,
             })
 
 @login_required
