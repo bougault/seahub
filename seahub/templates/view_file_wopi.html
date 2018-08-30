@@ -45,6 +45,7 @@
     document.getElementById('office_form').submit();
     document.getElementById('office_frame').className = '';
 
+    {% if can_edit %}
     var interval;
     var refreshLock = function() {
         $.ajax({
@@ -69,6 +70,7 @@
         });
     };
     interval = setInterval(refreshLock, 60 * 1000);
+    {% endif %}
 </script>
 {% if enable_watermark %}
 <script type="text/javascript" src="{{ MEDIA_URL }}js/watermark.js"></script>
