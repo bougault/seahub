@@ -88,6 +88,7 @@
     "Internal error. Failed to copy %(name)s.": "Bels\u0151 hiba. %(name)s m\u00e1sol\u00e1sa sikertelen.", 
     "Internal error. Failed to move %(name)s and %(amount)s other item(s).": "Bels\u0151 hiba. %(name)s mozgat\u00e1sa \u00e9s m\u00e9g %(amount)s m\u00e1sik elem\u00e9 sikertelen.", 
     "Internal error. Failed to move %(name)s.": "Bels\u0151 hiba. %(name)s mozgat\u00e1sa sikertelen.", 
+    "Internal link copied to clipboard": "Bels\u0151 link v\u00e1g\u00f3lapra m\u00e1solva", 
     "Invalid destination path": "\u00c9rv\u00e9nytelen c\u00e9l \u00fatvonal", 
     "Invalid quota.": "\u00c9rv\u00e9nytelen kv\u00f3ta", 
     "It is required.": "Sz\u00fcks\u00e9ges.", 
