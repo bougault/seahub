@@ -7,13 +7,14 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from seaserv import seafile_api, edit_repo
+from seaserv import seafile_api, edit_repo, check_group_staff
 from pysearpc import SearpcError
 from django.core.urlresolvers import reverse
 from django.db import IntegrityError
 from django.db.models import Count
 from django.http import HttpResponse
 from django.utils.translation import ugettext as _
+from seahub.base.templatetags.seahub_tags import email2nickname
 
 from seahub.api2.authentication import TokenAuthentication
 from seahub.api2.throttling import UserRateThrottle
@@ -131,11 +132,19 @@ class WikisView(APIView):
                 error_msg = 'Library %s not found.' % repo_id
                 return api_error(status.HTTP_404_NOT_FOUND, error_msg)
 
-            is_owner = seafile_api.is_repo_owner(username, repo_id)
-            is_admin = is_repo_admin(username, repo_id) 
+            # repo owner
+            is_repo_owner = seafile_api.is_repo_owner(username, repo_id)
 
-            if not is_owner:
-                if not is_admin:
+            # shared repo
+            repo_admin = is_repo_admin(username, repo_id)
+
+            # department repo
+            group_repo_owner = seafile_api.get_repo_owner(repo_id)
+            group_id = email2nickname(group_repo_owner)
+            is_group_staff = check_group_staff(group_id, username)
+
+            if not is_repo_owner:
+                if not (repo_admin or is_group_staff):
                     error_msg = _('Permission denied.')
                     return api_error(status.HTTP_403_FORBIDDEN, error_msg)
 
